@@ -104,6 +104,54 @@ function Create(props) {
   );
 }
 
+function Update(props) {
+  // props로 받은 값을 내부에서 변경할 수 있도록, prop -> state로 환승
+  const [title, setTitle] = useState(props.title);
+  const [body, setBody] = useState(props.body);
+
+  return (
+    <article>
+      <h2>Update</h2>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+
+          const title = event.target.title.value;
+          const body = event.target.body.value;
+          props.onUpdate(title, body);
+        }}
+      >
+        <p>
+          <input
+            type="text"
+            name="title"
+            placeholder="title"
+            value={title} //props.title이 아닌 state title
+            onChange={(event) => {
+              // 새로운 값을 입력할 때 마다, setTitle로 Title을 지정
+              setTitle(event.target.value);
+            }}
+          ></input>
+        </p>
+        <p>
+          <textarea
+            name="body"
+            placeholder="body"
+            cols="35"
+            value={body} //props.body가 아닌 state body
+            onChange={(event) => {
+              setBody(event.target.value);
+            }}
+          ></textarea>
+        </p>
+        <p>
+          <input type="submit" value="Update"></input>
+        </p>
+      </form>
+    </article>
+  );
+}
+
 function App() {
   // 일반적인 지역변수는 변경이 되지 않지만, state는 변경이 됨
   // const mode = "WELCOME";
@@ -122,9 +170,13 @@ function App() {
   ]);
 
   let content = null;
+  let contextControl = null; //맥락적으로 만들어지는 ui -> update가 특정 상황에만 보이도록
+
   if (mode === "WELCOME") {
+    // Home
     content = <Article title="Welcome" body="Hello, WEB"></Article>;
   } else if (mode === "READ") {
+    // 상세보기
     let title,
       body = null;
 
@@ -137,6 +189,19 @@ function App() {
       }
     }
     content = <Article title={title} body={body}></Article>;
+    contextControl = (
+      <li>
+        <a
+          href={"/update/" + id}
+          onClick={(event) => {
+            event.preventDefault();
+            setMode("UPDATE");
+          }}
+        >
+          Update
+        </a>
+      </li>
+    );
   } else if (mode === "CREATE") {
     content = (
       <Create
@@ -160,6 +225,39 @@ function App() {
         }}
       ></Create>
     ); //별도의 컴포넌트로 만들 것임.
+  } else if (mode === "UPDATE") {
+    let title,
+      body = null;
+    for (let i = 0; i < topics.length; i++) {
+      if (topics[i].id === id) {
+        title = topics[i].title;
+        body = topics[i].body;
+      }
+    }
+
+    // 기존의 title, body값, onUpdate함수를 props로 보냄
+    content = (
+      <Update
+        title={title}
+        body={body}
+        onUpdate={(title, body) => {
+          const newTopics = [...topics]; //topics가 객체이기 때문에 복제
+
+          //READ를 한 상태에서만, UPDATE가 실행될 수 있기 때문에,
+          // READ에서 받은 id를 가져올 수 있음.
+          const updatedTopic = { id: id, title: title, body: body };
+
+          for (let i = 0; i < newTopics.length; i++) {
+            if (newTopics[i].id === id) {
+              newTopics[i] = updatedTopic;
+              break; //완료 했다면 이후는 안찾아봐도 되므로 break
+            }
+          }
+          setTopics(newTopics);
+          setMode("READ"); //update이후 상세보기로 이동
+        }}
+      ></Update>
+    ); //업데이트 컴포넌트 출력
   }
   return (
     <div>
@@ -181,17 +279,23 @@ function App() {
         }}
       ></Nav>
       {content}
-      <br></br>
-      {/* create기능 구현 */}
-      <a
-        href="/create"
-        onClick={(event) => {
-          event.preventDefault();
-          setMode("CREATE"); //mode값을 CREATE로 바꾸고, App component가 다시 실행되면서, 해당되는 기능 실행
-        }}
-      >
-        Create
-      </a>
+      <ul>
+        <li>
+          {/* create 기능 구현 */}
+          <a
+            href="/create"
+            onClick={(event) => {
+              event.preventDefault();
+              setMode("CREATE"); //mode값을 CREATE로 바꾸고, App component가 다시 실행되면서, 해당되는 기능 실행
+            }}
+          >
+            Create
+          </a>
+        </li>
+
+        {/* update 기능 구현 */}
+        {contextControl}
+      </ul>
     </div>
   );
 }
