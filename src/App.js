@@ -207,14 +207,19 @@ function App() {
             type="button"
             value="Delete"
             onClick={() => {
-              const newTopics = [];
-              for (let i = 0; i < topics.length; i++) {
-                if (topics[i].id !== id) {
-                  newTopics.push(topics[i]); // id값이 일치하지 않는 값들만 push -> 원하는 것만 있는 새 배열 만들기
+              let result = window.confirm("정말로 삭제하시겠습니까?");
+              if (result == true) {
+                const newTopics = [];
+                for (let i = 0; i < topics.length; i++) {
+                  if (topics[i].id !== id) {
+                    newTopics.push(topics[i]); // id값이 일치하지 않는 값들만 push -> 원하는 것만 있는 새 배열 만들기
+                  }
                 }
+                setTopics(newTopics); // 새로운 배열로 바꿔주기
+                setMode("WELCOME"); // 삭제하고 나면, 초기화면으로
+              } else {
+                alert("취소되었습니다.");
               }
-              setTopics(newTopics); // 새로운 배열로 바꿔주기
-              setMode("WELCOME"); // 삭제하고 나면, 초기화면으로
             }}
           ></input>
         </li>
