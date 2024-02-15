@@ -66,6 +66,44 @@ function Article(props) {
   );
 }
 
+function Create(props) {
+  return (
+    // Article 컴포넌트가 아닌, article태그임.
+    <article>
+      <h2>Create</h2>
+      {/* 정보를 서버로 전송할 때, 사용하는 form태그 */}
+
+      <form
+        // onSubmit은 submit버튼을 클릭했을 때, form태그에서 발생하는 이벤트
+        onSubmit={(event) => {
+          event.preventDefault(); // 하지 않으면 페이지가 새로고침 되어버림
+
+          //form태그 안에서 발생하기 때문에, event타겟은 form태그
+          const title = event.target.title.value; //name이 title의 태그의 값을 가져옴
+          const body = event.target.body.value;
+
+          // onCreate함수를 통해, 작성한 title, body의 값을 제공
+          props.onCreate(title, body);
+        }}
+      >
+        {/* 서로 블록처럼 쌓이는 형태로 만들기 위해, p태그로 각각을 감쌈 */}
+        <p>
+          {/* placeholder은 어떤 속성을 입력해야 하는지 알려주는 것 */}
+          <input type="text" name="title" placeholder="title"></input>
+        </p>
+        <p>
+          {/* 여러줄을 적는 본문은 textarea */}
+          <textarea name="body" placeholder="body" cols="35"></textarea>
+        </p>
+        <p>
+          {/* value는 버튼에 적힐 값 */}
+          <input type="submit" value="Create"></input>
+        </p>
+      </form>
+    </article>
+  );
+}
+
 function App() {
   // 일반적인 지역변수는 변경이 되지 않지만, state는 변경이 됨
   // const mode = "WELCOME";
@@ -74,13 +112,14 @@ function App() {
   //0번째 값이 상태의 값
   const [mode, setMode] = useState("WELCOME");
   const [id, setId] = useState(null);
+  const [nextId, setNextId] = useState(4); //기본으로 3개가 있으니, 다음으로 생성될 Id는 4
 
-  // 함수 안에서는 바뀌지 않기 때문에, const 적용
-  const topics = [
+  // 변경사항이 있으면, 바뀔 수 있도록 state로 승격
+  const [topics, setTopics] = useState([
     { id: 1, title: "HTML", body: "HTML is ..." },
     { id: 2, title: "CSS", body: "CSS is ..." },
     { id: 3, title: "JavaScript", body: "JavaScript is ..." },
-  ];
+  ]);
 
   let content = null;
   if (mode === "WELCOME") {
@@ -98,6 +137,29 @@ function App() {
       }
     }
     content = <Article title={title} body={body}></Article>;
+  } else if (mode === "CREATE") {
+    content = (
+      <Create
+        onCreate={(_title, _body) => {
+          const newTopic = { id: nextId, title: _title, body: _body };
+          // topics가 객체(배열)이기 때문에, 복제본을 만들고
+          const newTopics = [...topics];
+
+          //복제본에 새로운 내용을 추가한 뒤
+          newTopics.push(newTopic);
+
+          // 완성된 복제본을 setTopics로 전달
+          setTopics(newTopics);
+
+          //글을 추가한 뒤, 추가한 글의 상세페이지로 이동
+          setMode("READ");
+          setId(nextId);
+
+          // 또 새로운 글을 추가할 경우를 위해, nextId++
+          setNextId(nextId + 1);
+        }}
+      ></Create>
+    ); //별도의 컴포넌트로 만들 것임.
   }
   return (
     <div>
@@ -119,6 +181,17 @@ function App() {
         }}
       ></Nav>
       {content}
+      <br></br>
+      {/* create기능 구현 */}
+      <a
+        href="/create"
+        onClick={(event) => {
+          event.preventDefault();
+          setMode("CREATE"); //mode값을 CREATE로 바꾸고, App component가 다시 실행되면서, 해당되는 기능 실행
+        }}
+      >
+        Create
+      </a>
     </div>
   );
 }
