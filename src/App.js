@@ -190,17 +190,35 @@ function App() {
     }
     content = <Article title={title} body={body}></Article>;
     contextControl = (
-      <li>
-        <a
-          href={"/update/" + id}
-          onClick={(event) => {
-            event.preventDefault();
-            setMode("UPDATE");
-          }}
-        >
-          Update
-        </a>
-      </li>
+      <>
+        <li>
+          <a
+            href={"/update/" + id}
+            onClick={(event) => {
+              event.preventDefault();
+              setMode("UPDATE");
+            }}
+          >
+            Update
+          </a>
+        </li>
+        <li>
+          <input
+            type="button"
+            value="Delete"
+            onClick={() => {
+              const newTopics = [];
+              for (let i = 0; i < topics.length; i++) {
+                if (topics[i].id !== id) {
+                  newTopics.push(topics[i]); // id값이 일치하지 않는 값들만 push -> 원하는 것만 있는 새 배열 만들기
+                }
+              }
+              setTopics(newTopics); // 새로운 배열로 바꿔주기
+              setMode("WELCOME"); // 삭제하고 나면, 초기화면으로
+            }}
+          ></input>
+        </li>
+      </>
     );
   } else if (mode === "CREATE") {
     content = (
